@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nassau Candy | Shipping Route Efficiency</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root{
+  --bg:#eef3f1;
+  --surface:rgba(255,255,255,.88);
+  --surface-strong:#ffffff;
+  --ink:#15211d;
+  --muted:#71807a;
+  --line:#dce6e1;
+  --primary:#0f766e;
+  --primary-dark:#0b5751;
+  --accent:#d8f3e8;
+  --good:#138a62;
+  --warn:#b7791f;
+  --bad:#c94d5c;
+  --shadow:0 18px 45px rgba(31,57,47,.10);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:"DM Sans",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 92% 2%, rgba(173,235,215,.48), transparent 25%),
+    radial-gradient(circle at 8% 92%, rgba(205,225,255,.45), transparent 24%),
+    var(--bg);
+  color:var(--ink);
+}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:268px;
+  background:linear-gradient(180deg,#123d37 0%,#102c29 100%);
+  color:#e7f3ee;
+  padding:26px 16px;
+  position:fixed;
+  inset:18px auto 18px 18px;
+  height:calc(100vh - 36px);
+  border-radius:24px;
+  box-shadow:0 20px 50px rgba(12,45,40,.22);
+}
+.logo{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:20px;
+  font-weight:700;
+  letter-spacing:-.5px;
+  padding:8px 12px 28px;
+}
+.logo span{
+  display:block;
+  margin-top:3px;
+  color:#83e0c0;
+  font-size:11px;
+  font-family:"DM Sans",sans-serif;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.nav{display:grid;gap:7px}
+.nav button{
+  border:0;
+  background:transparent;
+  color:#a8c1b9;
+  text-align:left;
+  padding:12px 14px;
+  border-radius:12px;
+  font-family:"DM Sans",sans-serif;
+  font-size:13px;
+  font-weight:600;
+  cursor:pointer;
+  transition:.2s ease;
+}
+.nav button.active,.nav button:hover{
+  background:rgba(173,235,215,.13);
+  color:#fff;
+  transform:translateX(2px);
+}
+.side-note{
+  position:absolute;
+  bottom:24px;
+  left:24px;
+  right:24px;
+  padding:13px;
+  border-radius:14px;
+  background:rgba(255,255,255,.06);
+  font-size:11px;
+  color:#9ab7ae;
+  line-height:1.6;
+}
+main{
+  margin-left:304px;
+  width:calc(100% - 304px);
+  padding:42px 42px 36px;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:18px;
+  margin-bottom:26px;
+}
+.title h1{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:30px;
+  letter-spacing:-1.1px;
+  margin:0 0 7px;
+}
+.title p{margin:0;color:var(--muted);font-size:13px}
+.actions{display:flex;gap:9px}
+.btn{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.72);
+  padding:10px 15px;
+  border-radius:11px;
+  cursor:pointer;
+  color:var(--ink);
+  font-family:"DM Sans",sans-serif;
+  font-weight:700;
+  box-shadow:0 6px 18px rgba(30,60,50,.05);
+}
+.btn.primary{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+.filters{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:11px;
+  background:rgba(255,255,255,.66);
+  backdrop-filter:blur(12px);
+  padding:12px;
+  border:1px solid rgba(255,255,255,.9);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  margin-bottom:22px;
+}
+.filters select{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  background:#fff;
+  color:var(--ink);
+  font-family:"DM Sans",sans-serif;
+  outline:none;
+}
+.page{display:none}.page.active{display:block}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:22px}
+.kpi{
+  position:relative;
+  overflow:hidden;
+  background:var(--surface);
+  backdrop-filter:blur(8px);
+  padding:17px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.95);
+  box-shadow:var(--shadow);
+}
+.kpi:before{
+  content:"";
+  position:absolute;
+  width:52px;height:52px;
+  border-radius:50%;
+  right:-18px;top:-18px;
+  background:var(--accent);
+}
+.kpi small{position:relative;color:var(--muted);font-size:11px;font-weight:700}
+.kpi strong{
+  position:relative;
+  display:block;
+  font-family:"Space Grotesk",sans-serif;
+  font-size:23px;
+  letter-spacing:-.5px;
+  margin:8px 0 6px;
+}
+.delta{position:relative;font-size:11px;color:var(--good);font-weight:700}
+.delta.bad{color:var(--bad)}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:18px}
+.grid.equal{grid-template-columns:1fr 1fr}
+.card{
+  background:var(--surface);
+  backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,.95);
+  border-radius:20px;
+  box-shadow:var(--shadow);
+  padding:19px;
+}
+.card h3{
+  font-family:"Space Grotesk",sans-serif;
+  font-size:14px;
+  letter-spacing:-.25px;
+  margin:0 0 17px;
+}
+.chartbox{height:260px}.chartbox.tall{height:330px}
+.insights{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.insight{
+  padding:15px;
+  border-radius:14px;
+  background:linear-gradient(145deg,#f7fcfa,#edf8f3);
+  border:1px solid #d8ece2;
+  border-left:4px solid var(--primary);
+  font-size:12px;
+  line-height:1.55;
+}
+.insight b{
+  display:block;
+  font-size:10px;
+  letter-spacing:.8px;
+  color:var(--primary-dark);
+  margin-bottom:6px;
+}
+.tablewrap{overflow:auto;border-radius:13px;border:1px solid var(--line)}
+.data{width:100%;border-collapse:collapse;font-size:12px;background:#fff}
+.data th,.data td{padding:12px 10px;border-bottom:1px solid #edf1ef;text-align:left;white-space:nowrap}
+.data th{
+  color:var(--muted);
+  font-weight:800;
+  background:#f6faf8;
+  position:sticky;top:0;
+  text-transform:uppercase;
+  font-size:10px;
+  letter-spacing:.45px;
+}
+.data tr:hover td{background:#f8fcfa}
+.pill{display:inline-block;padding:5px 9px;border-radius:99px;font-size:10px;font-weight:800}
+.good{background:#e2f6ee;color:#0d7857}
+.medium{background:#fff4dc;color:#9b6611}
+.badpill{background:#fdecef;color:#b6384b}
+.route-score{font-family:"Space Grotesk",sans-serif;font-weight:800}
+.search{
+  padding:10px 12px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  width:240px;
+  font-family:"DM Sans",sans-serif;
+}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:8px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px}
+
+@media(max-width:1100px){
+  .sidebar{width:220px}.app main{margin-left:256px;width:calc(100% - 256px);padding:30px}
+  .kpis{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .sidebar{position:static;width:100%;height:auto;inset:auto;border-radius:0;padding:18px}
+  .app{display:block}.side-note{display:none}
+  main,.app main{margin:0;width:100%;padding:16px}
+  .kpis,.filters,.insights{grid-template-columns:1fr 1fr}
+  .top{align-items:flex-start}.actions{display:none}
+}
+</style>
+
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="logo">Nassau <span>Logistics Intelligence</span></div>
+  <div class="nav">
+    <button class="active" data-page="overview">Executive Overview</button>
+    <button data-page="routes">Route Efficiency</button>
+    <button data-page="factories">Factory Analysis</button>
+    <button data-page="customers">Customer Analysis</button>
+    <button data-page="modes">Shipping Modes</button>
+    <button data-page="cost">Cost Optimization</button>
+    <button data-page="delays">Delay Analysis</button>
+    <button data-page="shipments">Shipment Details</button>
+  </div>
+  <div class="side-note">Factory-to-customer logistics intelligence<br>Demo data is included until the Nassau Candy dataset is connected.</div>
+</aside>
+
+<main>
+<header class="top">
+  <div class="title"><h1>Shipping Intelligence Command Center</h1><p>Nassau Candy Distributor · Route performance, delivery reliability & cost intelligence</p></div>
+  <div class="actions"><button class="btn" onclick="resetFilters()">Reset Filters</button><button class="btn primary" onclick="window.print()">Export / Print</button></div>
+</header>
+
+<div class="filters">
+<select id="factory"><option value="All">All Factories</option><option>Factory A</option><option>Factory B</option><option>Factory C</option></select>
+<select id="customer"><option value="All">All Customers</option><option>Customer North</option><option>Customer South</option><option>Customer East</option><option>Customer West</option></select>
+<select id="mode"><option value="All">All Shipping Modes</option><option>Truck</option><option>Rail</option><option>Air</option><option>Parcel</option></select>
+<select id="region"><option value="All">All Regions</option><option>Northeast</option><option>South</option><option>Midwest</option><option>West</option></select>
+<select id="month"><option value="All">All Periods</option><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>May</option><option>Jun</option></select>
+</div>
+
+<section id="overview" class="page active">
+<div class="kpis">
+<div class="kpi"><small>Total Shipments</small><strong>12,486</strong><span class="delta">▲ 8.2%</span></div>
+<div class="kpi"><small>Total Shipping Cost</small><strong>$1.84M</strong><span class="delta bad">▲ 4.6%</span></div>
+<div class="kpi"><small>Avg. Delivery Time</small><strong>4.7 days</strong><span class="delta">▼ 0.4d</span></div>
+<div class="kpi"><small>On-Time Delivery</small><strong>93.8%</strong><span class="delta">▲ 2.1%</span></div>
+<div class="kpi"><small>Cost / Unit</small><strong>$0.82</strong><span class="delta">▼ 3.5%</span></div>
+<div class="kpi"><small>Units Shipped</small><strong>2.24M</strong><span class="delta">▲ 11.4%</span></div>
+</div>
+<div class="grid">
+<div class="card"><h3>Monthly Shipping Cost & Shipment Volume</h3><div class="chartbox"><canvas id="trend"></canvas></div></div>
+<div class="card"><h3>Delivery Status</h3><div class="chartbox"><canvas id="status"></canvas></div></div>
+</div>
+<div class="grid equal">
+<div class="card"><h3>Top 10 Expensive Routes</h3><div class="chartbox"><canvas id="routesChart"></canvas></div></div>
+<div class="card"><h3>Shipping Cost by Mode</h3><div class="chartbox"><canvas id="modeChart"></canvas></div></div>
+</div>
+<div class="card"><h3>Dynamic Executive Insights</h3><div class="insights">
+<div class="insight"><b>CRITICAL ROUTE</b>Factory B → Customer West combines high cost with below-average on-time performance.</div>
+<div class="insight"><b>BEST MODE</b>Rail has the lowest average cost per unit among high-volume modes.</div>
+<div class="insight"><b>OPTIMIZATION</b>Northeast routes show the strongest opportunity for delivery-time reduction.</div>
+</div></div>
+</section>
+
+<section id="routes" class="page">
+<div class="kpis"><div class="kpi"><small>Routes Analyzed</small><strong>84</strong></div><div class="kpi"><small>Efficient</small><strong>41</strong></div><div class="kpi"><small>Needs Improvement</small><strong>27</strong></div><div class="kpi"><small>Critical</small><strong>16</strong></div><div class="kpi"><small>Avg Score</small><strong>78/100</strong></div><div class="kpi"><small>Potential Savings</small><strong>$186K</strong></div></div>
+<div class="card"><h3>Factory → Customer Route Performance</h3><div class="tablewrap"><table class="data" id="routeTable"><thead><tr><th>Route</th><th>Mode</th><th>Shipments</th><th>Units</th><th>Cost</th><th>Avg Days</th><th>On-Time</th><th>Cost/Unit</th><th>Score</th><th>Status</th></tr></thead><tbody></tbody></table></div></div>
+</section>
+
+<section id="factories" class="page"><div class="grid equal"><div class="card"><h3>Factory Cost Ranking</h3><div class="chartbox tall"><canvas id="factoryCost"></canvas></div></div><div class="card"><h3>Factory Delivery Performance</h3><div class="chartbox tall"><canvas id="factoryOT"></canvas></div></div></div><div class="card"><h3>Factory Performance Summary</h3><div class="tablewrap"><table class="data"><thead><tr><th>Factory</th><th>Shipments</th><th>Units</th><th>Cost</th><th>Avg Days</th><th>On-Time</th><th>Customers</th><th>Score</th></tr></thead><tbody><tr><td>Factory A</td><td>4,820</td><td>910K</td><td>$602K</td><td>4.2</td><td>95.4%</td><td>29</td><td class="route-score">91</td></tr><tr><td>Factory B</td><td>4,110</td><td>710K</td><td>$704K</td><td>5.4</td><td>90.1%</td><td>35</td><td class="route-score">72</td></tr><tr><td>Factory C</td><td>3,556</td><td>620K</td><td>$534K</td><td>4.5</td><td>95.8%</td><td>31</td><td class="route-score">88</td></tr></tbody></table></div></div></section>
+
+<section id="customers" class="page"><div class="grid equal"><div class="card"><h3>Top Customers by Shipping Cost</h3><div class="chartbox tall"><canvas id="customerCost"></canvas></div></div><div class="card"><h3>Customer Service Risk</h3><div class="chartbox tall"><canvas id="customerRisk"></canvas></div></div></div><div class="card"><h3>Customer Delivery Summary</h3><div class="tablewrap"><table class="data"><thead><tr><th>Customer</th><th>Region</th><th>Orders</th><th>Units</th><th>Shipping Cost</th><th>Avg Days</th><th>On-Time</th><th>Risk</th></tr></thead><tbody><tr><td>Customer North</td><td>Northeast</td><td>2,140</td><td>380K</td><td>$298K</td><td>4.1</td><td>96.2%</td><td><span class="pill good">LOW</span></td></tr><tr><td>Customer South</td><td>South</td><td>1,890</td><td>340K</td><td>$322K</td><td>5.2</td><td>91.0%</td><td><span class="pill medium">MEDIUM</span></td></tr><tr><td>Customer West</td><td>West</td><td>2,430</td><td>410K</td><td>$391K</td><td>6.1</td><td>87.8%</td><td><span class="pill badpill">HIGH</span></td></tr></tbody></table></div></div></section>
+
+<section id="modes" class="page"><div class="grid equal"><div class="card"><h3>Shipping Mode Efficiency</h3><div class="chartbox tall"><canvas id="modeEfficiency"></canvas></div></div><div class="card"><h3>Cost vs Delivery Time</h3><div class="chartbox tall"><canvas id="scatter"></canvas></div></div></div><div class="card"><h3>Recommended Mode Strategy</h3><div class="insights"><div class="insight"><b>RAIL</b>Best cost efficiency for predictable, high-volume lanes.</div><div class="insight"><b>TRUCK</b>Best balance for regional shipments requiring flexibility.</div><div class="insight"><b>AIR</b>Reserve for urgent/high-value orders due to high cost per unit.</div></div></div></section>
+
+<section id="cost" class="page"><div class="kpis"><div class="kpi"><small>Current Cost</small><strong>$1.84M</strong></div><div class="kpi"><small>Benchmark Cost</small><strong>$1.65M</strong></div><div class="kpi"><small>Gap</small><strong>$190K</strong></div><div class="kpi"><small>Potential Savings</small><strong>10.3%</strong></div></div><div class="grid equal"><div class="card"><h3>Cost vs On-Time Performance</h3><div class="chartbox tall"><canvas id="matrix"></canvas></div></div><div class="card"><h3>Cost by Factory</h3><div class="chartbox tall"><canvas id="costFactory"></canvas></div></div></div></section>
+
+<section id="delays" class="page"><div class="kpis"><div class="kpi"><small>Late Shipments</small><strong>774</strong></div><div class="kpi"><small>Late Rate</small><strong>6.2%</strong></div><div class="kpi"><small>Avg Delay</small><strong>1.8 days</strong></div><div class="kpi"><small>Max Delay</small><strong>11 days</strong></div></div><div class="grid equal"><div class="card"><h3>Delay Trend</h3><div class="chartbox tall"><canvas id="delayTrend"></canvas></div></div><div class="card"><h3>Delay Rate by Region</h3><div class="chartbox tall"><canvas id="delayRegion"></canvas></div></div></div><div class="card"><h3>Priority Actions</h3><div class="insights"><div class="insight"><b>HIGH PRIORITY</b>Review Factory B → Customer West lane and evaluate Truck/Rail alternatives.</div><div class="insight"><b>MEDIUM PRIORITY</b>Analyze Northeast peak-period capacity constraints.</div><div class="insight"><b>MONITOR</b>Parcel mode is reliable but becomes expensive above high-volume thresholds.</div></div></div></section>
+
+<section id="shipments" class="page"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">Shipment-Level Details</h3><input class="search" id="search" placeholder="Search order, factory, customer..."></div><div class="tablewrap"><table class="data" id="shipmentTable"><thead><tr><th>Order ID</th><th>Date</th><th>Factory</th><th>Customer</th><th>Product</th><th>Units</th><th>Mode</th><th>Cost</th><th>Days</th><th>Status</th></tr></thead><tbody></tbody></table></div></div></section>
+</main>
+</div>
+<script>
+const routeData=[
+["Factory A → Customer North","Truck",820,154000,"$118K",4.1,"96.4%","$0.77",92,"Highly Efficient"],
+["Factory A → Customer South","Rail",610,129000,"$82K",4.8,"94.9%","$0.64",88,"Highly Efficient"],
+["Factory B → Customer West","Air",430,72000,"$146K",6.8,"84.2%","$2.03",48,"Critical"],
+["Factory B → Customer South","Truck",690,121000,"$112K",5.7,"89.6%","$0.93",64,"Needs Improvement"],
+["Factory C → Customer North","Rail",720,146000,"$79K",4.2,"97.1%","$0.54",95,"Highly Efficient"],
+["Factory C → Customer West","Truck",540,108000,"$93K",4.9,"94.0%","$0.86",81,"Moderate"],
+["Factory A → Customer East","Parcel",510,88000,"$101K",3.9,"96.8%","$1.15",86,"Moderate"],
+["Factory B → Customer East","Truck",640,115000,"$99K",5.1,"91.7%","$0.86",73,"Needs Improvement"]
+];
+const months=["Jan","Feb","Mar","Apr","May","Jun"];
+const charts=[];
+function chart(id,type,data,options={}){const c=new Chart(document.getElementById(id),{type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10,font:{size:10}}}},scales:type==="doughnut"?{}:{x:{grid:{display:false}},y:{grid:{color:"#eef1f6"}},},...options}});charts.push(c);return c}
+chart("trend","line",{labels:months,datasets:[{label:"Shipping Cost ($K)",data:[264,278,292,301,337,368],tension:.35,borderWidth:2},{label:"Shipments",data:[1750,1820,1930,2050,2290,2646],tension:.35,borderWidth:2}]});
+chart("status","doughnut",{labels:["On Time","Late"],datasets:[{data:[93.8,6.2],borderWidth:0}]},{plugins:{legend:{position:"bottom"}}});
+chart("routesChart","bar",{labels:["B→West","B→South","A→East","C→West","B→East"],datasets:[{label:"Cost $K",data:[146,112,101,93,99],borderRadius:5}]},{indexAxis:"y",plugins:{legend:{display:false}}});
+chart("modeChart","bar",{labels:["Truck","Rail","Air","Parcel"],datasets:[{label:"Cost $K",data:[710,326,388,416],borderRadius:5}]},{plugins:{legend:{display:false}}});
+chart("factoryCost","bar",{labels:["Factory B","Factory A","Factory C"],datasets:[{label:"Cost $K",data:[704,602,534],borderRadius:5}]},{indexAxis:"y",plugins:{legend:{display:false}}});
+chart("factoryOT","bar",{labels:["Factory A","Factory B","Factory C"],datasets:[{label:"On-Time %",data:[95.4,90.1,95.8],borderRadius:5}]},{plugins:{legend:{display:false}},scales:{y:{min:80,max:100}}});
+chart("customerCost","bar",{labels:["West","South","North","East"],datasets:[{label:"Cost $K",data:[391,322,298,267],borderRadius:5}]},{indexAxis:"y",plugins:{legend:{display:false}}});
+chart("customerRisk","doughnut",{labels:["Low Risk","Medium Risk","High Risk"],datasets:[{data:[58,27,15],borderWidth:0}]},{plugins:{legend:{position:"bottom"}}});
+chart("modeEfficiency","bar",{labels:["Rail","Truck","Parcel","Air"],datasets:[{label:"Cost / Unit",data:[.54,.86,1.15,2.03],borderRadius:5},{label:"Delivery Days",data:[4.8,5.1,3.9,6.8],borderRadius:5}]});
+chart("scatter","scatter",{datasets:[{label:"Shipping Modes",data:[{x:5.1,y:.86},{x:4.8,y:.54},{x:6.8,y:2.03},{x:3.9,y:1.15}],pointRadius:8}]},{scales:{x:{title:{display:true,text:"Average Delivery Days"}},y:{title:{display:true,text:"Cost / Unit ($)"}}}});
+chart("matrix","scatter",{datasets:[{label:"Routes",data:[{x:.77,y:96},{x:.64,y:95},{x:2.03,y:84},{x:.93,y:90},{x:.54,y:97},{x:.86,y:94},{x:1.15,y:97},{x:.86,y:92}],pointRadius:7}]},{scales:{x:{title:{display:true,text:"Average Cost / Unit ($)"}},y:{title:{display:true,text:"On-Time %"},min:80,max:100}}});
+chart("costFactory","bar",{labels:["Factory A","Factory B","Factory C"],datasets:[{label:"Actual $K",data:[602,704,534],borderRadius:5},{label:"Benchmark $K",data:[550,610,490],borderRadius:5}]});
+chart("delayTrend","line",{labels:months,datasets:[{label:"Late Shipments",data:[118,126,119,132,137,142],tension:.35,borderWidth:2}]});
+chart("delayRegion","bar",{labels:["West","South","Northeast","Midwest"],datasets:[{label:"Late %",data:[11.4,8.1,5.3,4.8],borderRadius:5}]},{plugins:{legend:{display:false}}});
+
+function renderTables(){
+ const tb=document.querySelector("#routeTable tbody"); tb.innerHTML="";
+ routeData.forEach(r=>{const tr=document.createElement("tr");let cls=r[9]==="Highly Efficient"?"good":r[9]==="Critical"?"badpill":"medium";tr.innerHTML=`<td>${r[0]}</td><td>${r[1]}</td><td>${r[2].toLocaleString()}</td><td>${r[3].toLocaleString()}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[7]}</td><td class="route-score">${r[8]}</td><td><span class="pill ${cls}">${r[9]}</span></td>`;tb.appendChild(tr)});
+ const st=document.querySelector("#shipmentTable tbody"); st.innerHTML="";
+ for(let i=1;i<=18;i++){let late=i%7===0||i%11===0;let row=[`ORD-${10000+i}`,`2026-${String((i%6)+1).padStart(2,"0")}-${String((i%27)+1).padStart(2,"0")}`,["Factory A","Factory B","Factory C"][i%3],["Customer North","Customer South","Customer East","Customer West"][i%4],["Chocolate","Gummy","Snack","Candy Mix"][i%4],(500+i*37),["Truck","Rail","Air","Parcel"][i%4],"$"+(420+i*31),late?7:4,late?"Late":"On Time"];let tr=document.createElement("tr");tr.innerHTML=`<td>${row[0]}</td><td>${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td>${row[4]}</td><td>${row[5].toLocaleString()}</td><td>${row[6]}</td><td>${row[7]}</td><td>${row[8]}</td><td><span class="pill ${late?"badpill":"good"}">${row[9]}</span></td>`;st.appendChild(tr)}
+}
+renderTables();
+
+document.querySelectorAll(".nav button").forEach(b=>b.addEventListener("click",()=>{document.querySelectorAll(".nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));document.getElementById(b.dataset.page).classList.add("active");window.scrollTo(0,0)}));
+function resetFilters(){document.querySelectorAll(".filters select").forEach(s=>s.value="All")}
+document.querySelectorAll(".filters select").forEach(s=>s.addEventListener("change",()=>{}));
+document.getElementById("search").addEventListener("input",e=>{let q=e.target.value.toLowerCase();document.querySelectorAll("#shipmentTable tbody tr").forEach(r=>r.style.display=r.innerText.toLowerCase().includes(q)?"":"none")});
+</script>
+</body>
+</html>
